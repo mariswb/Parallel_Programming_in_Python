@@ -43,15 +43,17 @@ def update_numpy(T):
 
     ### We need to send and receive our left and right edges
 
-    # send and receive left edge
+    # send right edge and receive left edge
+    if mpi_rank < mpi_size - 1:
+        comm.send(T[-1], dest=mpi_rank+1)
     if mpi_rank > 0:
-        comm.send(T[0], dest=mpi_rank-1)
         T_left = comm.recv(source=mpi_rank-1)
         T_next[0] = T[0] + D*dt/dx**2*(T[1] - 2*T[0] + T_left)
 
-    # send and receive right edge
+    # send left edge and receive right edge
+    if mpi_rank > 0:
+        comm.send(T[0], dest=mpi_rank-1)
     if mpi_rank < mpi_size - 1:
-        comm.send(T[-1], dest=mpi_rank+1)
         T_right = comm.recv(source=mpi_rank+1)
         T_next[-1] = T[-1] + D*dt/dx**2*(T[-2] - 2*T[-1] + T_right)
 
